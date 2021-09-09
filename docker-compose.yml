@@ -1,0 +1,11 @@
+version: '3'
+
+services:
+  aenorbot:
+    image: 'kyoto44/aenorbot'
+    environment:
+      TWITCH_CLIENT_ID:
+      TWITCH_BEARER_TOKEN: 
+      DISCORD_AUTH_TOKEN:
+      STREAMS_CHANNEL_ID:
+    restart: always
