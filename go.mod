@@ -1,4 +1,4 @@
-module aenorbot
+module github.com/N-Blade/AenorBot
 
 go 1.17
 

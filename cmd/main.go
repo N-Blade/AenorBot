@@ -6,6 +6,7 @@ import (
 	"syscall"
 
 	"github.com/N-Blade/AenorBot/pkg/twitch"
+	"github.com/N-Blade/AenorBot/pkg/wordfilter"
 
 	"github.com/bwmarrin/discordgo"
 	log "github.com/sirupsen/logrus"
@@ -24,11 +25,17 @@ func main() {
 		log.Fatal("error opening connection,", err)
 	}
 
+	err = wordfilter.Init(dg)
+	if err != nil {
+		log.Fatal("Can't init word filter", err)
+	}
+	log.Info("Word filter inited")
+
 	go twitch.StreamWatcher(dg)
 
 	log.Info("AenorBot is now running.")
 	sc := make(chan os.Signal, 1)
-	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
+	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
 	<-sc
 
 	dg.Close()

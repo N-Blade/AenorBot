@@ -51,8 +51,8 @@ func StreamWatcher(s *discordgo.Session) {
 	TwitchClientID := os.Getenv("TWITCH_CLIENT_ID")
 	TwitchBearerToken := os.Getenv("TWITCH_BEARER_TOKEN")
 	StreamsChannelID := os.Getenv("STREAMS_CHANNEL_ID")
-
 	client := &http.Client{}
+	log.Info("Twitch stream watcher inited")
 
 	for {
 		req, err := http.NewRequest("GET", TwitchApiURL, nil)
