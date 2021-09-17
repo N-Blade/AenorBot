@@ -1,10 +1,11 @@
 package main
 
 import (
-	"aenorbot/twitch"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/N-Blade/AenorBot/pkg/twitch"
 
 	"github.com/bwmarrin/discordgo"
 	log "github.com/sirupsen/logrus"

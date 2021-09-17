@@ -13,7 +13,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-type TwitchStreamsJSON struct {
+type TwitchStreams struct {
 	Data []struct {
 		ID           string      `json:"id"`
 		UserID       string      `json:"user_id"`
@@ -51,10 +51,11 @@ func StreamWatcher(s *discordgo.Session) {
 	TwitchClientID := os.Getenv("TWITCH_CLIENT_ID")
 	TwitchBearerToken := os.Getenv("TWITCH_BEARER_TOKEN")
 	StreamsChannelID := os.Getenv("STREAMS_CHANNEL_ID")
-	for {
-		client := &http.Client{}
-		req, err := http.NewRequest("GET", TwitchApiURL, nil)
 
+	client := &http.Client{}
+
+	for {
+		req, err := http.NewRequest("GET", TwitchApiURL, nil)
 		if err != nil {
 			log.Error(err)
 		}
@@ -65,19 +66,20 @@ func StreamWatcher(s *discordgo.Session) {
 		if err != nil {
 			log.Error(err)
 		}
-		defer res.Body.Close()
 
 		body, err := ioutil.ReadAll(res.Body)
 		if err != nil {
 			log.Error(err)
 		}
 
-		var streamsJSON TwitchStreamsJSON
-		if err := json.Unmarshal(body, &streamsJSON); err != nil {
+		res.Body.Close()
+
+		var streams TwitchStreams
+		if err := json.Unmarshal(body, &streams); err != nil {
 			log.Error("Can unmarshal json", err)
 		}
 
-		if len(streamsJSON.Data) == 0 {
+		if len(streams.Data) == 0 {
 			for k, v := range Streams {
 				err = s.ChannelMessageDelete(StreamsChannelID, v.MessageID)
 				if err != nil {
@@ -87,7 +89,7 @@ func StreamWatcher(s *discordgo.Session) {
 			}
 		}
 
-		for _, stream := range streamsJSON.Data {
+		for _, stream := range streams.Data {
 			if _, ok := Streams[stream.ID]; ok {
 				continue
 			} else {
@@ -111,7 +113,7 @@ func StreamWatcher(s *discordgo.Session) {
 		}
 
 		tempMap := make(map[string]*Stream)
-		for _, stream := range streamsJSON.Data {
+		for _, stream := range streams.Data {
 			tempMap[stream.ID] = &Stream{}
 		}
 
