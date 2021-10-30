@@ -58,7 +58,7 @@ func MessageFilter(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	for _, msgWord := range msgWords {
 		for _, word := range filter.BadWords {
-			if strings.Contains(msgWord, word) {
+			if strings.EqualFold(msgWord, word) {
 				log.Infof("Bad word found: %s, pattern: %s", msgWord, word)
 				err := s.ChannelMessageDelete(m.ChannelID, m.ID)
 				if err != nil {
