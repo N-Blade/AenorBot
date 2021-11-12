@@ -74,56 +74,60 @@ func StreamWatcher(s *discordgo.Session) {
 
 		res.Body.Close()
 
-		var streams TwitchStreams
-		if err := json.Unmarshal(body, &streams); err != nil {
-			log.Error("Can unmarshal json", err)
-		}
+		if res.StatusCode != 200 {
+			log.Error(string(body))
+		} else {
+			var streams TwitchStreams
+			if err := json.Unmarshal(body, &streams); err != nil {
+				log.Error("Can unmarshal json", err)
+			}
 
-		if len(streams.Data) == 0 {
+			if len(streams.Data) == 0 {
+				for k, v := range Streams {
+					err = s.ChannelMessageDelete(StreamsChannelID, v.MessageID)
+					if err != nil {
+						log.Error("Can't delete message with ID:", v, err)
+					}
+					delete(Streams, k)
+				}
+			}
+
+			for _, stream := range streams.Data {
+				if _, ok := Streams[stream.ID]; ok {
+					continue
+				} else {
+					fullURL := fmt.Sprintf("https://twitch.tv/%s", stream.UserLogin)
+					log.Infof("New stream detected! Link: %s", fullURL)
+					msg, err := s.ChannelMessageSend(StreamsChannelID,
+						fmt.Sprintf("%s начал трансляцию! Ссылка на стрим: %s", stream.UserName, fullURL))
+					if err != nil {
+						log.Error("Can't send message", err)
+					}
+
+					Streams[stream.ID] = &Stream{
+						UserName:     stream.UserName,
+						Title:        stream.Title,
+						ThumbnailURL: stream.ThumbnailURL,
+						URL:          fullURL,
+						MessageID:    msg.ID,
+					}
+
+				}
+			}
+
+			tempMap := make(map[string]*Stream)
+			for _, stream := range streams.Data {
+				tempMap[stream.ID] = &Stream{}
+			}
+
 			for k, v := range Streams {
-				err = s.ChannelMessageDelete(StreamsChannelID, v.MessageID)
-				if err != nil {
-					log.Error("Can't delete message with ID:", v, err)
+				if _, ok := tempMap[k]; !ok {
+					err = s.ChannelMessageDelete(StreamsChannelID, v.MessageID)
+					if err != nil {
+						log.Error("Can't delete message with ID:", v, err)
+					}
+					delete(Streams, k)
 				}
-				delete(Streams, k)
-			}
-		}
-
-		for _, stream := range streams.Data {
-			if _, ok := Streams[stream.ID]; ok {
-				continue
-			} else {
-				fullURL := fmt.Sprintf("https://twitch.tv/%s", stream.UserLogin)
-				log.Infof("New stream detected! Link: %s", fullURL)
-				msg, err := s.ChannelMessageSend(StreamsChannelID,
-					fmt.Sprintf("%s начал трансляцию! Ссылка на стрим: %s", stream.UserName, fullURL))
-				if err != nil {
-					log.Error("Can't send message", err)
-				}
-
-				Streams[stream.ID] = &Stream{
-					UserName:     stream.UserName,
-					Title:        stream.Title,
-					ThumbnailURL: stream.ThumbnailURL,
-					URL:          fullURL,
-					MessageID:    msg.ID,
-				}
-
-			}
-		}
-
-		tempMap := make(map[string]*Stream)
-		for _, stream := range streams.Data {
-			tempMap[stream.ID] = &Stream{}
-		}
-
-		for k, v := range Streams {
-			if _, ok := tempMap[k]; !ok {
-				err = s.ChannelMessageDelete(StreamsChannelID, v.MessageID)
-				if err != nil {
-					log.Error("Can't delete message with ID:", v, err)
-				}
-				delete(Streams, k)
 			}
 		}
 
