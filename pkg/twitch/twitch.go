@@ -94,7 +94,7 @@ func StreamWatcher(s *discordgo.Session) {
 				continue
 			} else {
 				fullURL := fmt.Sprintf("https://twitch.tv/%s", stream.UserLogin)
-				log.Info("New stream detected!", fullURL)
+				log.Infof("New stream detected! Link: %s", fullURL)
 				msg, err := s.ChannelMessageSend(StreamsChannelID,
 					fmt.Sprintf("%s начал трансляцию! Ссылка на стрим: %s", stream.UserName, fullURL))
 				if err != nil {
