@@ -1,0 +1,7 @@
+version: 1
+packages:
+  - path: "pkg/rating"
+    name: "rating"
+    engine: "mysql"
+    schema: "pkg/rating/schema.sql"
+    queries: "pkg/rating/query.sql"

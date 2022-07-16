@@ -6,6 +6,7 @@
 ## Current features: 
 - 👀 Monitoring Northern Blade streams on Twitch
 - 👮🏻‍♂️ Chat filtering
+- 👀 Rating updates
 
 
 [DiscordBadge]: https://img.shields.io/discord/660239810321186828?label=Discord&logo=discord&logoColor=white

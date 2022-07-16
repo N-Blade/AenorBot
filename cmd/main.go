@@ -5,6 +5,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/N-Blade/AenorBot/pkg/rating"
 	"github.com/N-Blade/AenorBot/pkg/twitch"
 	"github.com/N-Blade/AenorBot/pkg/wordfilter"
 
@@ -32,6 +33,7 @@ func main() {
 	log.Info("Word filter inited")
 
 	go twitch.StreamWatcher(dg)
+	go rating.RatingUpdater(dg)
 
 	log.Info("AenorBot is now running.")
 	sc := make(chan os.Signal, 1)
