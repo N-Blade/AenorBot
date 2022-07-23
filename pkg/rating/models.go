@@ -5,15 +5,21 @@
 package rating
 
 import (
-	"time"
+	"database/sql"
 )
 
 type Bgrating struct {
-	ID            int32
-	Rating        int32
-	CharName      string
-	CharGuildName string
-	CharLevel     int32
-	BattlesCount  int32
-	LastMatchTime time.Time
+	ID                 int32
+	CharName           string
+	CharGuildName      string
+	CharLevel          int32
+	SoloRating         int32
+	SoloWins           int32
+	SoloLoses          int32
+	LastSoloMatchTime  sql.NullTime
+	PartyRating        int32
+	PartyWins          int32
+	PartyLoses         int32
+	LastPartyMatchTime sql.NullTime
+	BattlesCount       int32
 }

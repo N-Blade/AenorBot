@@ -9,27 +9,84 @@ import (
 	"context"
 )
 
-const getTop30ByRating = `-- name: GetTop30ByRating :many
-SELECT id, rating, char_name, char_guild_name, char_level, battles_count, last_match_time FROM bgrating WHERE battles_count > 9 ORDER BY rating DESC, battles_count LIMIT 30
+const getTop30PartyRating = `-- name: GetTop30PartyRating :many
+SELECT char_name, char_guild_name, char_level, party_rating, party_wins, party_loses, (party_wins + party_loses) as match_count
+FROM bgrating WHERE party_wins + party_loses > 9 ORDER BY party_rating DESC, party_wins + party_loses LIMIT 30
 `
 
-func (q *Queries) GetTop30ByRating(ctx context.Context) ([]Bgrating, error) {
-	rows, err := q.db.QueryContext(ctx, getTop30ByRating)
+type GetTop30PartyRatingRow struct {
+	CharName      string
+	CharGuildName string
+	CharLevel     int32
+	PartyRating   int32
+	PartyWins     int32
+	PartyLoses    int32
+	MatchCount    int32
+}
+
+func (q *Queries) GetTop30PartyRating(ctx context.Context) ([]GetTop30PartyRatingRow, error) {
+	rows, err := q.db.QueryContext(ctx, getTop30PartyRating)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Bgrating
+	var items []GetTop30PartyRatingRow
 	for rows.Next() {
-		var i Bgrating
+		var i GetTop30PartyRatingRow
 		if err := rows.Scan(
-			&i.ID,
-			&i.Rating,
 			&i.CharName,
 			&i.CharGuildName,
 			&i.CharLevel,
-			&i.BattlesCount,
-			&i.LastMatchTime,
+			&i.PartyRating,
+			&i.PartyWins,
+			&i.PartyLoses,
+			&i.MatchCount,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getTop30SoloRating = `-- name: GetTop30SoloRating :many
+SELECT char_name, char_guild_name, char_level, solo_rating, solo_wins, solo_loses, (solo_wins + solo_loses) as match_count
+FROM bgrating WHERE solo_wins + solo_loses > 9 ORDER BY solo_rating DESC, solo_wins + solo_loses LIMIT 30
+`
+
+type GetTop30SoloRatingRow struct {
+	CharName      string
+	CharGuildName string
+	CharLevel     int32
+	SoloRating    int32
+	SoloWins      int32
+	SoloLoses     int32
+	MatchCount    int32
+}
+
+func (q *Queries) GetTop30SoloRating(ctx context.Context) ([]GetTop30SoloRatingRow, error) {
+	rows, err := q.db.QueryContext(ctx, getTop30SoloRating)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetTop30SoloRatingRow
+	for rows.Next() {
+		var i GetTop30SoloRatingRow
+		if err := rows.Scan(
+			&i.CharName,
+			&i.CharGuildName,
+			&i.CharLevel,
+			&i.SoloRating,
+			&i.SoloWins,
+			&i.SoloLoses,
+			&i.MatchCount,
 		); err != nil {
 			return nil, err
 		}

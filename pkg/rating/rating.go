@@ -31,38 +31,66 @@ func RatingUpdater(s *discordgo.Session) {
 	log.Info("Rating updater inited")
 	queries := New(db)
 
-	msgs, err := s.ChannelMessages(RatingChannelID, 1, "", "", "")
+	msgs, err := s.ChannelMessages(RatingChannelID, 2, "", "", "")
 	if err != nil {
 		log.Error(err)
 	}
 
-	var ratingMessage *discordgo.Message
+	var soloRatingMessage, partyRatingMessage *discordgo.Message
 
-	if len(msgs) != 0 {
-		ratingMessage = msgs[0]
-	} else {
-		ratingMessage, err = s.ChannelMessageSend(RatingChannelID, "tmp")
+	if len(msgs) == 0 {
+		soloRatingMessage, err = s.ChannelMessageSend(RatingChannelID, "Пока здесь ничего нет, но скоро будет!")
 		if err != nil {
 			log.Error(err)
 		}
+		partyRatingMessage, err = s.ChannelMessageSend(RatingChannelID, "Пока здесь ничего нет, но скоро будет!")
+		if err != nil {
+			log.Error(err)
+		}
+	} else {
+		soloRatingMessage = msgs[1]
+		partyRatingMessage = msgs[0]
 	}
 
 	for {
-		ratingArr, err := queries.GetTop30ByRating(ctx)
+		soloRatingArr, err := queries.GetTop30SoloRating(ctx)
 		if err != nil {
-			log.Errorf("Can't get top 30, error: %s", err)
+			log.Errorf("Can't get top 30 solo, %s", err)
 		}
 
-		fullMessage := "Ни один из игроков ещё не сыграл 10 матчей!"
+		soloFullMessage := "Одиночный рейтинг\nНи один из игроков ещё не сыграл 10 одиночных матчей!"
 
-		if len(ratingArr) != 0 {
-			fullMessage = ""
-			for i, player := range ratingArr {
-				row := fmt.Sprintf("%d. %s, Уровень: %d, Рейтинг: %d, Количество матчей: %d\n",
-					i+1, player.CharName, player.CharLevel+1, player.Rating, player.BattlesCount)
-				fullMessage += row
+		if len(soloRatingArr) != 0 {
+			soloFullMessage = "Одиночный рейтинг\n"
+			for i, player := range soloRatingArr {
+				row := fmt.Sprintf("%d. %s (%s), Уровень: %d, Рейтинг: %d, Количество матчей: %d\n",
+					i+1, player.CharName, player.CharGuildName, player.CharLevel+1, player.SoloRating, player.MatchCount)
+				soloFullMessage += row
 			}
-			s.ChannelMessageEdit(RatingChannelID, ratingMessage.ID, fullMessage)
+			_, err = s.ChannelMessageEdit(RatingChannelID, soloRatingMessage.ID, soloFullMessage)
+			if err != nil {
+				log.Error(err)
+			}
+		}
+
+		partyFullMessage := "Групповой рейтинг\nНи один из игроков ещё не сыграл 10 групповых матчей!"
+
+		partyRatingArr, err := queries.GetTop30PartyRating(ctx)
+		if err != nil {
+			log.Errorf("Can't get top 30 party, %s", err)
+		}
+
+		if len(partyRatingArr) != 0 {
+			partyFullMessage = "Групповой рейтинг\n"
+			for i, player := range partyRatingArr {
+				row := fmt.Sprintf("%d. %s (%s), Уровень: %d, Рейтинг: %d, Количество матчей: %d\n",
+					i+1, player.CharName, player.CharGuildName, player.CharLevel+1, player.PartyRating, player.MatchCount)
+				partyFullMessage += row
+			}
+			_, err = s.ChannelMessageEdit(RatingChannelID, partyRatingMessage.ID, partyFullMessage)
+			if err != nil {
+				log.Error(err)
+			}
 		}
 
 		time.Sleep(time.Second * 5)
